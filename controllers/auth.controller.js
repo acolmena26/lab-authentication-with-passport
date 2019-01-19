@@ -1,5 +1,6 @@
 const User = require('../models/user.model');
 const mongoose = require('mongoose');
+const passport = require('passport');
 
 module.exports.login = (req, res, next) => {
   res.render('auth/login');
@@ -7,6 +8,38 @@ module.exports.login = (req, res, next) => {
 
 module.exports.doLogin = (req, res, next) => {
   // TODO: authenticate user
+  function renderWithErrors(users, errors){
+    res.render("auth/login", {
+      user: users,
+      errors: errors
+    })
+  }
+
+  // const email = req.body.email; (CALLED RESTRUCTURING)
+
+  const {email, password} = req.body;
+  if (!email || !password){
+    res.renderWithErrors(req.body, {
+      email: email ? undefined: "email is required",
+      password: password ? undefined: "password is required"
+    });
+  } else {
+    passport.authenticate('local-auth', (error, users, validation) => {
+      if(error){
+        next(error);
+      } else if(!users){
+        renderWithErrors(req.body, validation);
+      } else {
+        req.login(users, (error) => {
+          if(error){
+            next(error);
+          } else {
+            res.redirect("/profile");
+          }
+        });
+      }
+    })(req, res, next);
+  }
 }
 
 module.exports.register = (req, res, next) => {
@@ -51,8 +84,10 @@ module.exports.doRegister = (req, res, next) => {
 
 module.exports.logout = (req, res, next) => {
   // TODO: destroy session
+  req.logout();
+  res.redirect('/login');
 }
 
 module.exports.profile = (req, res, next) => {
-  res.render('auth/profile');
+  res.render('users/profile');
 }

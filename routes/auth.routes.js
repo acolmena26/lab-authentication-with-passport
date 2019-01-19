@@ -10,5 +10,6 @@ router.get('/register', authController.register);
 router.post('/register', authController.doRegister);
 
 router.get('/logout', authController.logout);
+router.get('/profile', secure.isAuthenticated, authController.profile);
 
 module.exports = router;
